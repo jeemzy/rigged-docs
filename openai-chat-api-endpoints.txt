@@ -1,0 +1,168 @@
+# Chat API Overview
+# The Chat API allows for creating model responses for a given conversation. It supports messages from different roles (e.g., system, user, assistant) and allows for various configurations such as temperature, max tokens, and response formats.
+
+# 1. Creating a Chat Completion
+# Endpoint: POST https://api.openai.com/v1/chat/completions
+# This endpoint generates a response based on the provided conversation messages.
+
+# Request Body
+request_body = {
+    "model": "string (required)",  # ID of the model to use, e.g., "gpt-4o-mini".
+    "messages": "array (required)",  # A list of messages representing the conversation.
+    "temperature": 1.0,  # (optional) Controls randomness in the response (0-2). Default: 1.
+    "max_completion_tokens": 4096,  # (optional) Max tokens for response (upper limit).
+    "top_p": 1,  # (optional) Controls nucleus sampling. Default: 1.
+    "n": 1,  # (optional) Number of response choices to generate. Default: 1.
+    "frequency_penalty": 0,  # (optional) Penalizes repeating text. Default: 0.
+    "presence_penalty": 0,  # (optional) Encourages new topics. Default: 0.
+    "response_format": {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "response_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "response": {"type": "string"}
+                },
+                "required": ["response"]
+            }
+        }
+    }  # Optional structured output format.
+}
+
+# Example Messages Array
+messages = [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Hello! How are you today?"}
+]
+
+# Example Request (Python)
+from openai import OpenAI
+client = OpenAI()
+
+completion = client.chat.completions.create(
+    model="gpt-4o-mini-2024-07-18",
+    messages=messages,
+    temperature=1.0,
+    max_completion_tokens=100,
+    n=1
+)
+
+print(completion.choices[0].message)
+
+# Example Response
+response = {
+    "id": "chatcmpl-123",
+    "object": "chat.completion",
+    "created": 1677652288,
+    "model": "gpt-4o-mini",
+    "choices": [
+        {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "Hello there! How can I assist you today?"
+            },
+            "logprobs": None,
+            "finish_reason": "stop"
+        }
+    ],
+    "usage": {
+        "prompt_tokens": 9,
+        "completion_tokens": 12,
+        "total_tokens": 21
+    }
+}
+
+# 2. Using curl to Create Chat Completion
+curl_command = '''
+curl https://api.openai.com/v1/chat/completions \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini-2024-07-18",
+    "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello! How are you today?"}
+    ],
+    "temperature": 1.0,
+    "max_completion_tokens": 100,
+    "n": 1
+  }'
+'''
+print(curl_command)
+
+# 3. Streaming Responses
+# You can enable streaming to receive responses token by token.
+stream_command = '''
+curl https://api.openai.com/v1/chat/completions \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini-2024-07-18",
+    "messages": [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello! How are you today?"}
+    ],
+    "stream": true
+  }'
+'''
+print(stream_command)
+
+# Example Streamed Response (Chunks)
+streamed_responses = [
+    {"id": "chatcmpl-123", "object": "chat.completion.chunk", "choices": [{"delta": {"role": "assistant"}, "finish_reason": None}]},
+    {"id": "chatcmpl-123", "object": "chat.completion.chunk", "choices": [{"delta": {"content": "Hello"}, "finish_reason": None}]},
+    {"id": "chatcmpl-123", "object": "chat.completion.chunk", "choices": [{"delta": {"content": " there!"}, "finish_reason": None}]},
+    {"id": "chatcmpl-123", "object": "chat.completion.chunk", "choices": [{"delta": {}, "finish_reason": "stop"}]}
+]
+
+# Combine streamed chunks into a complete response
+complete_response = "".join([chunk["choices"][0]["delta"].get("content", "") for chunk in streamed_responses])
+print("Streamed Response:", complete_response)
+
+# 4. Response Format Configuration
+# Use `response_format` to enforce JSON schema or plain JSON output.
+response_format = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "example_response",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "explanation": {"type": "string"},
+                            "output": {"type": "string"}
+                        },
+                        "required": ["explanation", "output"]
+                    }
+                },
+                "final_answer": {"type": "string"}
+            },
+            "required": ["steps", "final_answer"]
+        }
+    },
+    "strict": True
+}
+
+# Example Request with Response Format
+structured_completion = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a math tutor. Guide the user step by step."},
+        {"role": "user", "content": "Solve 3x + 2 = 11"}
+    ],
+    response_format=response_format,
+    temperature=0.7
+)
+
+print("Structured Response:", structured_completion.choices[0].message.content)
+
+# Recap:
+# - Use the Chat API for flexible and dynamic conversations.
+# - Configure advanced parameters like response formats and streaming.
+# - Leverage JSON schema for structured outputs to maintain format integrity.

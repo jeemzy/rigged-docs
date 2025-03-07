@@ -1,0 +1,101 @@
+# Batch API Overview
+# The Batch API enables asynchronous execution of multiple API requests, ideal for scenarios where immediate responses are not required or synchronous rate limits restrict throughput.
+
+# Key Use Cases
+# - Evaluations: Run large-scale performance tests on models.
+# - Classification: Label large datasets efficiently.
+# - Embedding Repositories: Generate embeddings for large content libraries.
+
+# Benefits of Batch API:
+# - Cost Efficiency: 50% discount compared to synchronous API requests.
+# - Higher Rate Limits: Execute significantly more requests without being bottlenecked by synchronous rate limits.
+# - Fast Completion: All batches complete within 24 hours, often much faster.
+
+# 1. Preparing Your Batch File
+# Batches begin with a `.jsonl` file where each line corresponds to a single API request.
+
+# Example `.jsonl` File:
+{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+{"custom_id": "request-2", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "You are an unhelpful assistant."}, {"role": "user", "content": "Hello world!"}], "max_tokens": 1000}}
+
+# 2. Uploading Your Batch File
+# Use the Files API to upload your `.jsonl` file:
+curl https://api.openai.com/v1/files \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -F purpose="batch" \
+  -F file="@batchinput.jsonl"
+
+# 3. Creating a Batch
+# Once uploaded, use the file's ID to create a batch:
+curl https://api.openai.com/v1/batches \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_file_id": "file-abc123",
+    "endpoint": "/v1/chat/completions",
+    "completion_window": "24h"
+  }'
+
+# Example Response:
+{
+  "id": "batch_abc123",
+  "status": "validating",
+  "completion_window": "24h",
+  "request_counts": {"total": 0, "completed": 0, "failed": 0},
+  "created_at": 1714508499
+}
+
+# 4. Checking Batch Status
+# To monitor batch progress:
+curl https://api.openai.com/v1/batches/batch_abc123 \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json"
+
+# Possible Batch Statuses:
+# - validating: Input file is being validated.
+# - in_progress: Batch execution is underway.
+# - finalizing: Batch is complete, preparing results.
+# - completed: Results are ready for retrieval.
+# - expired: Batch did not complete within the 24-hour window.
+# - cancelling: Batch is being cancelled.
+# - cancelled: Batch successfully cancelled.
+# - failed: Input file failed validation.
+
+# 5. Retrieving Results
+# Retrieve results using the `output_file_id`:
+curl https://api.openai.com/v1/files/file-xyz123/content \
+  -H "Authorization: Bearer $OPENAI_API_KEY" > batch_output.jsonl
+
+# Example Output File:
+{"custom_id": "request-1", "response": {"id": "chatcmpl-123", "choices": [{"message": {"content": "Hello!"}}]}}
+{"custom_id": "request-2", "response": {"id": "chatcmpl-456", "choices": [{"message": {"content": "Hello world!"}}]}}
+
+# 6. Cancelling a Batch
+# Cancel an in-progress batch:
+curl https://api.openai.com/v1/batches/batch_abc123/cancel \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -X POST
+
+# 7. Listing Batches
+# Retrieve all batches:
+curl https://api.openai.com/v1/batches?limit=10 \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json"
+
+# Model Availability
+# Supported Models: gpt-3.5-turbo, gpt-4, gpt-4o, gpt-4o-mini, and text-embedding models like text-embedding-ada-002.
+
+# Rate Limits
+# - Max requests per batch: 50,000.
+# - Max input file size: 200 MB.
+# - No limits for output tokens or batch requests today.
+# - Batch API rate limits are separate and do not consume per-model synchronous limits.
+
+# Batch Expiration
+# Batches not completed in 24 hours are marked expired. Completed requests are saved; failed requests are logged in the error file.
+
+# Example Error:
+{"custom_id": "request-3", "error": {"code": "batch_expired", "message": "Request expired before completion window."}}
+
+# Additional Resources
+# For use cases like classification, sentiment analysis, and summarization, visit the OpenAI Cookbook.

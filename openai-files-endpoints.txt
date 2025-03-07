@@ -1,0 +1,135 @@
+# Files API Overview
+# Files are used for various features like Assistants, Fine-tuning, and Batch API. 
+# Individual files can be up to 512 MB, and the total size of files for one organization is capped at 100 GB.
+
+# 1. Upload File
+# Endpoint: POST https://api.openai.com/v1/files
+# Uploads a file for use with the API.
+
+# Request Body
+request_body = {
+    "file": "file object (required)",  # File to be uploaded (not the file name, the actual file object).
+    "purpose": "string (required)",  # Intended purpose: "assistants", "vision", "batch", or "fine-tune".
+}
+
+# Notes:
+# - Files for Assistants API support up to 2 million tokens and specific file types.
+# - Fine-tuning API supports only `.jsonl` files with specific formats for chat/completions models.
+# - Batch API supports only `.jsonl` files up to 200 MB in size.
+
+# Example Request
+from openai import OpenAI
+client = OpenAI()
+
+uploaded_file = client.files.create(
+    file=open("mydata.jsonl", "rb"),
+    purpose="fine-tune"
+)
+
+# Example Response
+response = {
+    "id": "file-abc123",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "mydata.jsonl",
+    "purpose": "fine-tune"
+}
+
+# 2. List Files
+# Endpoint: GET https://api.openai.com/v1/files
+# Retrieves a list of files uploaded by the organization.
+
+# Query Parameters
+query_parameters = {
+    "purpose": "string (optional)",  # Filter files by their purpose.
+    "limit": 10000,  # Default: 10000; Range: 1-10,000.
+    "order": "desc",  # Sort order by created_at timestamp: "asc" or "desc" (default: "desc").
+    "after": "string (optional)"  # Cursor for pagination (e.g., object ID from the last page).
+}
+
+# Example Request
+file_list = client.files.list()
+
+# Example Response
+response = {
+    "data": [
+        {
+            "id": "file-abc123",
+            "object": "file",
+            "bytes": 175,
+            "created_at": 1613677385,
+            "filename": "salesOverview.pdf",
+            "purpose": "assistants",
+        },
+        {
+            "id": "file-def456",
+            "object": "file",
+            "bytes": 140,
+            "created_at": 1613779121,
+            "filename": "puppy.jsonl",
+            "purpose": "fine-tune",
+        }
+    ],
+    "object": "list"
+}
+
+# 3. Retrieve File
+# Endpoint: GET https://api.openai.com/v1/files/{file_id}
+# Retrieves information about a specific file.
+
+# Path Parameters
+path_parameters = {
+    "file_id": "string (required)"  # The ID of the file to retrieve.
+}
+
+# Example Request
+file_id = "file-abc123"
+retrieved_file = client.files.retrieve(file_id)
+
+# Example Response
+response = {
+    "id": "file-abc123",
+    "object": "file",
+    "bytes": 120000,
+    "created_at": 1677610602,
+    "filename": "mydata.jsonl",
+    "purpose": "fine-tune"
+}
+
+# 4. Delete File
+# Endpoint: DELETE https://api.openai.com/v1/files/{file_id}
+# Deletes a file from the organization’s file storage.
+
+# Example Request
+deleted_file = client.files.delete(file_id="file-abc123")
+
+# Example Response
+response = {
+    "id": "file-abc123",
+    "object": "file",
+    "deleted": True
+}
+
+# 5. Retrieve File Content
+# Endpoint: GET https://api.openai.com/v1/files/{file_id}/content
+# Retrieves the contents of a specific file.
+
+# Example Request
+file_content = client.files.content(file_id="file-abc123")
+
+# File Object Overview
+file_object = {
+    "id": "string",  # The unique identifier for the file.
+    "bytes": 120000,  # File size in bytes.
+    "created_at": 1677610602,  # Unix timestamp for when the file was created.
+    "filename": "string",  # The name of the file.
+    "object": "file",  # Always "file".
+    "purpose": "string",  # The intended purpose ("assistants", "batch", "fine-tune", etc.).
+}
+
+# Deprecated Fields
+deprecated_fields = {
+    "status": "string (deprecated)",  # File status: "uploaded", "processed", or "error".
+    "status_details": "string (deprecated)"  # Details for failed validations.
+}

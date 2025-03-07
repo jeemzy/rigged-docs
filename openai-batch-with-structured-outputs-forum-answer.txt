@@ -1,0 +1,112 @@
+# Step 1: Create a `batchinput.jsonl` file with the following content.
+# Note: Single line JSON, no indentation required. Whitespace is okay as per JSON standards.
+
+batch_input_content = '''{"custom_id": "request-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "system", "content": "You are a helpful math tutor. Guide the user through the solution step by step."}, {"role": "user", "content": "how can I solve 8x + 7 = -23"}], "max_tokens": 4096, "response_format": {"type": "json_schema", "json_schema": {"name": "math_response", "schema": {"type": "object", "properties": {"steps": {"type": "array", "items": {"type": "object", "properties": {"explanation": {"type": "string"}, "output": {"type": "string"}}, "required": ["explanation", "output"], "additionalProperties": false}}, "final_answer": {"type": "string"}}, "required": ["steps", "final_answer"], "additionalProperties": false}, "strict": true}}}}'''
+
+with open("batchinput.jsonl", "w") as file:
+    file.write(batch_input_content)
+
+# Step 2: Upload the file via Files API using curl
+# Replace $OPENAI_API_KEY with your actual API key.
+
+upload_command = '''
+curl https://api.openai.com/v1/files \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -F purpose="batch" \
+  -F file="@batchinput.jsonl"
+'''
+print(upload_command)
+
+# Example Response from Files API
+uploaded_file_response = {
+    "id": "file-F2ieFWin68wvubNmBPOUvsDW",
+    "object": "file",
+    "bytes": 432,
+    "created_at": 1723994600,
+    "filename": "batchinput.jsonl",
+    "purpose": "batch"
+}
+file_id = uploaded_file_response["id"]
+
+# Step 3: Create a batch using the uploaded file ID
+create_batch_command = f'''
+curl https://api.openai.com/v1/batches \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{{
+    "input_file_id": "{file_id}",
+    "endpoint": "/v1/chat/completions",
+    "completion_window": "24h"
+  }}'
+'''
+print(create_batch_command)
+
+# Example Response from Batch API
+batch_response = {
+    "id": "batch_asVAZzeehZ4mf2QE9zi1krvE",
+    "object": "batch",
+    "endpoint": "/v1/chat/completions",
+    "input_file_id": file_id,
+    "completion_window": "24h",
+    "status": "validating"
+}
+batch_id = batch_response["id"]
+
+# Step 4: Query batch status using the batch ID
+query_batch_status_command = f'''
+curl https://api.openai.com/v1/batches/{batch_id} \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json"
+'''
+print(query_batch_status_command)
+
+# Example Response for Batch Status
+batch_status_response = {
+    "id": batch_id,
+    "status": "completed",
+    "output_file_id": "file-8E8AlSiy5puk3vBkthQ8UNlw"
+}
+output_file_id = batch_status_response["output_file_id"]
+
+# Step 5: Retrieve the output file content
+retrieve_output_file_command = f'''
+curl https://api.openai.com/v1/files/{output_file_id}/content \
+  -H "Authorization: Bearer $OPENAI_API_KEY" > batch_output.jsonl
+'''
+print(retrieve_output_file_command)
+
+# Example Content of `batch_output.jsonl`
+batch_output_content = {
+    "id": "batch_req_3aNHqQt8UB1idP6RkXetGJgM",
+    "custom_id": "request-1",
+    "response": {
+        "status_code": 200,
+        "request_id": "a7ba2b98e25ff47189d7550eee2d8072",
+        "body": {
+            "id": "chatcmpl-9xc57s5a7ngga92riZU0wpcIdhEG3",
+            "object": "chat.completion",
+            "created": 1723994765,
+            "model": "gpt-4o-mini-2024-07-18",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "{\"steps\":[{\"explanation\":\"First, we will isolate the term with 'x' by moving the constant term to the other side of the equation. We can do this by subtracting 7 from both sides.\",\"output\":\"8x + 7 - 7 = -23 - 7\"},{\"explanation\":\"This simplifies to 8x = -30.\",\"output\":\"8x = -30\"},{\"explanation\":\"Next, we will isolate 'x' by dividing both sides of the equation by 8.\",\"output\":\"x = -30 / 8\"},{\"explanation\":\"Now we can simplify -30 / 8. We can divide both the numerator and the denominator by 2.\",\"output\":\"x = -15 / 4\"},{\"explanation\":\"Finally, we can write -15 / 4 in decimal form if necessary. -15 / 4 = -3.75.\",\"output\":\"x = -3.75\"}],\"final_answer\":\"x = -15/4 or x = -3.75\"}"
+                    },
+                    "finish_reason": "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 45,
+                "completion_tokens": 207,
+                "total_tokens": 252
+            }
+        },
+        "error": None
+    }
+}
+
+# Final Result
+final_result = batch_output_content["response"]["body"]["choices"][0]["message"]["content"]
+print("Final Output:\n", final_result)

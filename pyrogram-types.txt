@@ -1,0 +1,134 @@
+# Pyrogram Types Overview
+# Pyrogram Types provide objects and structures to interact with Telegram's API. Most types are automatically returned by methods and rarely need to be manually instantiated.
+
+# Example Usage:
+from pyrogram.types import User, Message
+
+# Note:
+# - Optional fields always exist but may be empty (`None`). Use a boolean check to confirm if a field is set: `if message.photo: ...`.
+
+---
+
+# Users & Chats
+# - "User": Represents a Telegram user or bot.
+# - "Chat": Represents a chat.
+# - "ChatPreview": A chat preview.
+# - "ChatPhoto": Represents a chat photo.
+# - "ChatMember": Contains information about a member of a chat.
+# - "ChatPermissions": Describes user permissions in a chat.
+# - "ChatPrivileges": Describes administrative privileges in a chat.
+# - "ChatInviteLink": An invite link for a chat.
+# - "ChatAdminWithInviteLinks": A chat admin who created invite links.
+# - "ChatEvent": A chat event from the recent actions log.
+# - "ChatEventFilter": Filters to obtain a chat event log.
+# - "ChatMemberUpdated": Changes in the status of a chat member.
+# - "ChatJoinRequest": A join request to a chat.
+# - "ChatJoiner": Information about a chat joiner.
+# - "Dialog": A user's dialog.
+# - "Restriction": A restriction applied to bots or chats.
+# - "EmojiStatus": A user's emoji status.
+
+---
+
+# Messages & Media
+# - "Message": Represents a message.
+# - "MessageEntity": Represents a special entity in a text message.
+# - "Photo": Represents a photo.
+# - "Thumbnail": A photo or file thumbnail.
+# - "Audio": An audio file treated as music.
+# - "Document": A generic file.
+# - "Animation": A GIF or H.264/MPEG-4 AVC video without sound.
+# - "Video": A video file.
+# - "Voice": A voice note.
+# - "VideoNote": A video message.
+# - "Contact": A phone contact.
+# - "Location": A point on the map.
+# - "Venue": A venue.
+# - "Sticker": A Telegram sticker.
+# - "Game": A game.
+# - "WebPage": A webpage preview.
+# - "Poll": A poll.
+# - "PollOption": An answer option in a poll.
+# - "Dice": A dice emoji with a random value.
+# - "Reaction": A reaction to a message.
+# - "VideoChatScheduled": Scheduled voice chat details.
+# - "VideoChatStarted": A service message about a started voice chat.
+# - "VideoChatEnded": A service message about an ended voice chat.
+# - "VideoChatMembersInvited": A service message about invited members to a voice chat.
+# - "WebAppData": Data sent from a Web App to the bot.
+# - "MessageReactions": Information about message reactions.
+# - "ChatReactions": Information about chat reactions.
+
+---
+
+# Bot Keyboards
+# - "ReplyKeyboardMarkup": Custom keyboard with reply options.
+# - "KeyboardButton": A button on the reply keyboard.
+# - "ReplyKeyboardRemove": Tells clients to remove a bot keyboard.
+# - "InlineKeyboardMarkup": Inline keyboard attached to a message.
+# - "InlineKeyboardButton": A button on an inline keyboard.
+# - "LoginUrl": Auto-authorizes a user via inline keyboard button.
+# - "ForceReply": Forces clients to show a reply interface.
+# - "CallbackQuery": Callback query from an inline keyboard button.
+# - "GameHighScore": A row in a game's high scores table.
+# - "CallbackGame": Placeholder for game information.
+# - "WebAppInfo": Information about a Web App.
+# - "MenuButton": Describes the bot's menu button.
+# - "MenuButtonCommands": A menu button to show the bot's commands.
+# - "MenuButtonWebApp": A menu button that launches a Web App.
+# - "MenuButtonDefault": Indicates no custom menu button is set.
+# - "SentWebAppMessage": Information about an inline message sent via a Web App.
+
+---
+
+# Bot Commands
+# - "BotCommand": A command with the standard slash ("/") prefix.
+# - "BotCommandScope": Scope to which bot commands are applied.
+# - "BotCommandScopeDefault": Default bot command scope.
+# - "BotCommandScopeAllPrivateChats": Covers all private chats.
+# - "BotCommandScopeAllGroupChats": Covers all group chats.
+# - "BotCommandScopeAllChatAdministrators": Covers all group chat admins.
+# - "BotCommandScopeChat": Covers a specific chat.
+# - "BotCommandScopeChatAdministrators": Covers all admins of a specific chat.
+# - "BotCommandScopeChatMember": Covers a specific member of a chat.
+
+---
+
+# Input Media
+# - "InputMedia": Content of a media message to be sent.
+# - "InputMediaPhoto": A photo for an album.
+# - "InputMediaVideo": A video for an album.
+# - "InputMediaAudio": An audio for an album.
+# - "InputMediaAnimation": An animation (GIF or video) for an album.
+# - "InputMediaDocument": A file for an album.
+# - "InputPhoneContact": A phone contact for your Telegram address book.
+
+---
+
+# Inline Mode
+# - "InlineQuery": An incoming inline query.
+# - "InlineQueryResult": A result of an inline query.
+# - "InlineQueryResultCachedAudio": A cached MP3 audio file.
+# - "InlineQueryResultCachedDocument": A cached file.
+# - "InlineQueryResultCachedAnimation": A cached GIF or animation file.
+# - "InlineQueryResultCachedPhoto": A cached photo.
+# - "InlineQueryResultCachedSticker": A cached sticker.
+# - "InlineQueryResultCachedVideo": A cached video file.
+# - "InlineQueryResultCachedVoice": A cached voice message.
+# - "InlineQueryResultArticle": A link to an article or webpage.
+# - "InlineQueryResultAudio": A link to an audio file.
+# - "InlineQueryResultContact": A contact with a phone number.
+# - "InlineQueryResultDocument": A link to a file.
+# - "InlineQueryResultAnimation": A link to an animation (e.g., GIF).
+# - "InlineQueryResultLocation": A location on a map.
+# - "InlineQueryResultPhoto": A link to a photo.
+# - "InlineQueryResultVenue": A venue.
+# - "InlineQueryResultVideo": A link to a video.
+# - "InlineQueryResultVoice": A link to a voice recording.
+# - "ChosenInlineResult": A user-selected result of an inline query.
+
+---
+
+# Authorization
+# - "SentCode": Information about a sent confirmation code.
+# - "TermsOfService": Telegram's Terms of Service returned during sign-in.

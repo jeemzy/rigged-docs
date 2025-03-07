@@ -1,0 +1,249 @@
+# Batch API Overview
+# The Batch API allows asynchronous processing of large API request batches with a 50% discount for completion within 24 hours.
+
+# 1. Create Batch
+# Endpoint: POST https://api.openai.com/v1/batches
+# Creates and executes a batch from an uploaded JSONL file containing requests.
+
+# Request Body
+request_body = {
+    "input_file_id": "string (required)",  # ID of the uploaded file (JSONL format, up to 200 MB and 50,000 requests).
+    "endpoint": "string (required)",  # Supported endpoints: /v1/chat/completions, /v1/embeddings, /v1/completions.
+    "completion_window": "24h",  # (required) Only "24h" is supported currently.
+    "metadata": "object or null (optional)",  # Optional custom metadata for the batch.
+}
+
+# Example Request
+from openai import OpenAI
+client = OpenAI()
+
+batch = client.batches.create(
+    input_file_id="file-abc123",
+    endpoint="/v1/chat/completions",
+    completion_window="24h"
+)
+
+# Example Response
+response = {
+    "id": "batch_abc123",
+    "object": "batch",
+    "endpoint": "/v1/chat/completions",
+    "errors": None,
+    "input_file_id": "file-abc123",
+    "completion_window": "24h",
+    "status": "validating",
+    "output_file_id": None,
+    "error_file_id": None,
+    "created_at": 1711471533,
+    "in_progress_at": None,
+    "expires_at": None,
+    "finalizing_at": None,
+    "completed_at": None,
+    "failed_at": None,
+    "expired_at": None,
+    "cancelling_at": None,
+    "cancelled_at": None,
+    "request_counts": {
+        "total": 0,
+        "completed": 0,
+        "failed": 0
+    },
+    "metadata": {
+        "customer_id": "user_123456789",
+        "batch_description": "Nightly eval job",
+    }
+}
+
+# 2. Retrieve Batch
+# Endpoint: GET https://api.openai.com/v1/batches/{batch_id}
+# Retrieves the details of a batch.
+
+# Example Request
+batch_id = "batch_abc123"
+batch = client.batches.retrieve(batch_id)
+
+# Example Response
+response = {
+    "id": "batch_abc123",
+    "object": "batch",
+    "endpoint": "/v1/completions",
+    "errors": None,
+    "input_file_id": "file-abc123",
+    "completion_window": "24h",
+    "status": "completed",
+    "output_file_id": "file-cvaTdG",
+    "error_file_id": "file-HOWS94",
+    "created_at": 1711471533,
+    "in_progress_at": 1711471538,
+    "expires_at": 1711557933,
+    "finalizing_at": 1711493133,
+    "completed_at": 1711493163,
+    "failed_at": None,
+    "expired_at": None,
+    "cancelling_at": None,
+    "cancelled_at": None,
+    "request_counts": {
+        "total": 100,
+        "completed": 95,
+        "failed": 5
+    },
+    "metadata": {
+        "customer_id": "user_123456789",
+        "batch_description": "Nightly eval job",
+    }
+}
+
+# 3. Cancel Batch
+# Endpoint: POST https://api.openai.com/v1/batches/{batch_id}/cancel
+# Cancels an in-progress batch. The status will be "cancelling" before switching to "cancelled."
+
+# Example Request
+batch_id = "batch_abc123"
+cancel_response = client.batches.cancel(batch_id)
+
+# Example Response
+response = {
+    "id": "batch_abc123",
+    "object": "batch",
+    "endpoint": "/v1/chat/completions",
+    "errors": None,
+    "input_file_id": "file-abc123",
+    "completion_window": "24h",
+    "status": "cancelling",
+    "output_file_id": None,
+    "error_file_id": None,
+    "created_at": 1711471533,
+    "in_progress_at": 1711471538,
+    "expires_at": 1711557933,
+    "finalizing_at": None,
+    "completed_at": None,
+    "failed_at": None,
+    "expired_at": None,
+    "cancelling_at": 1711475133,
+    "cancelled_at": None,
+    "request_counts": {
+        "total": 100,
+        "completed": 23,
+        "failed": 1
+    },
+    "metadata": {
+        "customer_id": "user_123456789",
+        "batch_description": "Nightly eval job",
+    }
+}
+
+# 4. List Batches
+# Endpoint: GET https://api.openai.com/v1/batches
+# Lists all batches for the organization with optional pagination.
+
+# Query Parameters
+query_parameters = {
+    "after": "string (optional)",  # A cursor for pagination (e.g., the last batch ID from the previous page).
+    "limit": 20  # Number of results per page (default is 20, max is 100).
+}
+
+# Example Request
+batches_list = client.batches.list()
+
+# Example Response
+response = {
+    "object": "list",
+    "data": [
+        {
+            "id": "batch_abc123",
+            "object": "batch",
+            "endpoint": "/v1/chat/completions",
+            "errors": None,
+            "input_file_id": "file-abc123",
+            "completion_window": "24h",
+            "status": "completed",
+            "output_file_id": "file-cvaTdG",
+            "error_file_id": "file-HOWS94",
+            "created_at": 1711471533,
+            "in_progress_at": 1711471538,
+            "expires_at": 1711557933,
+            "finalizing_at": 1711493133,
+            "completed_at": 1711493163,
+            "failed_at": None,
+            "expired_at": None,
+            "cancelling_at": None,
+            "cancelled_at": None,
+            "request_counts": {
+                "total": 100,
+                "completed": 95,
+                "failed": 5
+            },
+            "metadata": {
+                "customer_id": "user_123456789",
+                "batch_description": "Nightly job",
+            }
+        }
+    ],
+    "first_id": "batch_abc123",
+    "last_id": "batch_abc456",
+    "has_more": True
+}
+
+# Batch Object Details
+batch_object = {
+    "id": "batch_abc123",
+    "object": "batch",
+    "endpoint": "/v1/completions",
+    "input_file_id": "file-abc123",
+    "completion_window": "24h",
+    "status": "completed",
+    "output_file_id": "file-cvaTdG",
+    "error_file_id": "file-HOWS94",
+    "request_counts": {
+        "total": 100,
+        "completed": 95,
+        "failed": 5
+    },
+    "metadata": {
+        "customer_id": "user_123456789",
+        "batch_description": "Nightly eval job"
+    }
+}
+
+# Request Input Object Example (per-line JSONL format for batch input file)
+input_object = {
+    "custom_id": "request-1",  # Unique ID for each request.
+    "method": "POST",  # HTTP method (only POST supported).
+    "url": "/v1/chat/completions",  # Relative URL for the request.
+    "body": {  # JSON body of the request.
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "What is 2+2?"}
+        ]
+    }
+}
+
+# Request Output Object Example (per-line JSONL format for output file)
+output_object = {
+    "id": "batch_req_wnaDys",
+    "custom_id": "request-2",
+    "response": {
+        "status_code": 200,
+        "request_id": "req_c187b3",
+        "body": {
+            "id": "chatcmpl-9758Iw",
+            "object": "chat.completion",
+            "created": 1711475054,
+            "model": "gpt-4o-mini",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "2 + 2 equals 4."},
+                    "finish_reason": "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 24,
+                "completion_tokens": 15,
+                "total_tokens": 39
+            }
+        }
+    },
+    "error": None  # Error information, if applicable.
+}
